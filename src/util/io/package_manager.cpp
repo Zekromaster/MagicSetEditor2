@@ -202,24 +202,15 @@ bool PackageManager::install(const InstallablePackage& package) {
 void PackageDirectory::init(bool local) {
   is_local = local;
   if (local) {
-    init(wxStandardPaths::Get().GetUserDataDir() + _("/data"));
-  } else {
-    // determine data directory
-    String dir = wxStandardPaths::Get().GetDataDir();
-    // check if this is the actual data directory, especially during debugging,
-    // the data may be higher up:
-    //  exe path  = mse/build/debug/mse.exe
-    //  data path = mse/data
-    while (!wxDirExists(dir + _("/data"))) {
-      String d = dir;
-      dir = wxPathOnly(dir);
-      if (d == dir) {
-        // we are at the root -> 'data' not found anywhere in the path
-        dir = wxStandardPaths::Get().GetDataDir();
-        break;
-      }
+    auto dir = wxStandardPaths::Get().GetUserDataDir() + _("/data");
+    if (const auto local_dir = std::getenv("MSE_DIRECTORY")) {
+      dir = local_dir;
     }
-    init(dir + _("/data"));
+    init(dir);
+
+  } else {
+    String dir = wxStandardPaths::Get().GetDataDir() + _("/data");
+    init(dir);
   }
 }
 void PackageDirectory::init(const String& dir) {
